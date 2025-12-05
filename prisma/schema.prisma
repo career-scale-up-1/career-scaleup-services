@@ -1,0 +1,441 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  Seeker
+  Recruiter
+  Admin
+}
+
+enum JobStatus {
+  Open
+  Closed
+}
+
+enum WorkType {
+  Onsite
+  Remote
+  Hybrid
+}
+
+enum ApplicationStatus {
+  Applied
+  ShortListed
+  Hired
+  Rejected
+  Withdraw
+}
+
+model Users {
+  id                 String   @id @default(cuid())
+  email              String   @unique
+  password           String
+  fullName           String
+  role               Role
+  phoneNumber        String?
+  bio                String?
+  profilePicture     String?
+  profession         String?
+  education          String?
+  experience         String?
+  summary            String?
+  skills             String[] @default([])
+  website            String?
+
+  industry           String?
+  companyName        String?
+  companyDescription String?
+  logoUrl            String?
+
+  createdAt          DateTime @default(now())
+
+  resumes            Resume[]       @relation("UserResumes")
+  seekerApplications Application[]  @relation("SeekerApplications")
+  recruiterJobs      Job[]          @relation("RecruiterJobs")
+  AI_Interview       AI_Interview[] @relation("AIInterviewToUser")
+  coverLetters       Cover_Letter[] @relation("CoverLettersToUser")
+
+  experiences ProfileExperience[]
+  projects  ProfileProject[]
+  testimonials  Testimonial[]
+
+  participants  Participant[] @relation("UserToParticipants")
+  messages  Message[]
+
+  @@map("users")
+}
+
+model ProfileExperience {
+  id          String   @id @default(cuid())
+  userId      String
+  position    String
+  companyName String
+  startDate   DateTime
+  endDate     DateTime?
+  description String
+
+  user Users @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("profile_experiences")
+}
+
+
+model ProfileProject {
+  id           String   @id @default(cuid())
+  userId       String
+  projectName  String
+  description  String
+  technologies String[]
+  
+  user Users @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("profile_projects")
+}
+
+
+model Testimonial {
+  id      String   @id @default(cuid())
+  userId  String
+  name    String
+  company String
+  comment String
+
+  user Users @relation(fields: [userId], references: [id])
+
+  @@map("testimonials")
+}
+
+
+model Resume {
+  id          String   @id @default(cuid())
+  userId      String
+  generatedAt DateTime @default(now())
+  hobbies     String[] @default([])
+
+  basics         Basics?         @relation("BasicsToResume")
+  skills         Skills?         @relation("SkillsToResume")
+  educations     Education[]
+  experiences    Experience[]
+  projects       Project[]
+  awards         Award[]
+  certifications Certification[]
+  languages      Language[]
+  volunteerings  Volunteering[]
+  isActive  Boolean
+  isOptimized Boolean
+
+  AI_Interview AI_Interview[] @relation("AIInterviewToResume")
+
+  user Users @relation("UserResumes", fields: [userId], references: [id])
+
+  @@map("resume")
+}
+
+model Basics {
+  id         String  @id @default(cuid())
+  fullName   String
+  title      String?
+  email      String
+  phone      String?
+  website    String?
+  linkedin   String?
+  github     String?
+  summary    String?
+  locationId String?
+
+  location Location? @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  resume   Resume    @relation("BasicsToResume", fields: [resumeId], references: [id], onDelete: Cascade)
+  resumeId String    @unique
+
+  @@map("basics")
+}
+
+model Location {
+  id      String  @id @default(cuid())
+  city    String?
+  state   String?
+  country String?
+
+  basics Basics[]
+
+  @@map("location")
+}
+
+model Education {
+  id           String    @id @default(cuid())
+  resumeId     String
+  institution  String
+  degree       String
+  fieldOfStudy String
+  startDate    DateTime
+  endDate      DateTime?
+  details      String[]  @default([])
+
+  resume Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+
+  @@map("education")
+}
+
+model Experience {
+  id           String    @id @default(cuid())
+  resumeId     String
+  position     String
+  company      String
+  organization String?
+  startDate    DateTime
+  endDate      DateTime?
+  achievements String[]  @default([])
+  technologies String[]  @default([])
+  location     String?
+
+  resume Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+
+  @@map("experience")
+}
+
+model Project {
+  id           String    @id @default(cuid())
+  resumeId     String
+  name         String
+  description  String?
+  link         String?
+  technologies String[]  @default([])
+  startDate    DateTime
+  endDate      DateTime?
+  highlights   String[]  @default([])
+
+  resume Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+
+  @@map("project")
+}
+
+model Skills {
+  id         String   @id @default(cuid())
+  languages  String[] @default([])
+  frameworks String[] @default([])
+  databases  String[] @default([])
+  tools      String[] @default([])
+  other      String[] @default([])
+
+  resume   Resume @relation("SkillsToResume", fields: [resumeId], references: [id], onDelete: Cascade)
+  resumeId String @unique
+
+  @@map("skills")
+}
+
+model Award {
+  id       String  @id @default(cuid())
+  resumeId String
+  title    String
+  issuer   String?
+  year     String?
+  details  String?
+
+  resume Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+
+  @@map("award")
+}
+
+model Certification {
+  id            String    @id @default(cuid())
+  resumeId      String
+  name          String
+  issuer        String?
+  issueDate     DateTime
+  expiryDate    DateTime?
+  credentialUrl String?
+
+  resume Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+
+  @@map("certification")
+}
+
+model Language {
+  id          String @id @default(cuid())
+  resumeId    String
+  name        String
+  proficiency String
+
+  resume Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+
+  @@map("language")
+}
+
+model Volunteering {
+  id           String    @id @default(cuid())
+  resumeId     String
+  organization String
+  role         String
+  startDate    DateTime
+  endDate      DateTime?
+  description  String?
+
+  resume Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+
+  @@map("volunteering")
+}
+
+model Job {
+  id             String  @id @default(cuid())
+  recruiterId    String
+  companyName    String
+  companyLogo    String?
+  companyWebsite String?
+  title          String
+  jobType        String 
+  workType WorkType @default(Onsite)
+  description    String
+
+  qualifications   String[] @default([])
+  benefits         String[] @default([])
+  responsibilities String[] @default([])
+
+  status JobStatus @default(Open)
+
+  location        String?
+  country         String?
+  hourlyRate      Int?
+  fixedBudget     Int?
+  salaryMin       Int?
+  salaryMax       Int?
+  applicationLink String?
+  postedAt        DateTime      @default(now())
+  applications    Application[]
+  recruiter       Users         @relation("RecruiterJobs", fields: [recruiterId], references: [id])
+
+  AI_Interview AI_Interview[] @relation("AIInterviewToJob")
+
+  @@map("job")
+}
+
+model SavedJob {
+  id        String   @id @default(cuid())
+  userId    String
+  jobId     String?
+  externalJob Json?
+  createdAt DateTime @default(now())
+
+  @@map("saved_job")
+}
+
+model Application {
+  id          String   @id @default(cuid())
+  jobId       String
+  seekerId    String
+  coverLetter String?
+  resumeUrl   String?
+  status      ApplicationStatus   @default(Applied)
+  appliedAt   DateTime @default(now())
+
+  job    Job   @relation(fields: [jobId], references: [id])
+  seeker Users @relation("SeekerApplications", fields: [seekerId], references: [id])
+
+  conversation Conversation?
+
+  @@map("application")
+}
+
+model Otp {
+  id        String   @id @default(cuid())
+  email     String
+  code      String
+  expiresAt DateTime
+}
+
+model AI_Interview {
+  id       String @id @default(cuid())
+  resumeId String
+  jobId    String
+  seekerId String
+
+  resume Resume @relation("AIInterviewToResume", fields: [resumeId], references: [id], onDelete: Cascade)
+  job    Job    @relation("AIInterviewToJob", fields: [jobId], references: [id], onDelete: Cascade)
+  seeker Users  @relation("AIInterviewToUser", fields: [seekerId], references: [id], onDelete: Cascade)
+
+  totalQuestions   Int
+  questions        Json
+  answers          Json?
+  evaluationResult Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("ai_interview")
+}
+
+model Cover_Letter {
+  id  String @id @default(cuid())
+  seekerId    String
+
+  title String
+  
+  applicant Json
+  employer Json
+  letter Json
+
+  seeker Users @relation("CoverLettersToUser", fields: [seekerId], references: [id], onDelete: Cascade)
+  
+  @@map("cover_letter")
+}
+
+enum MessageStatus {
+  Sent
+  Read
+}
+
+model Conversation {
+  id String @id @default(cuid())
+
+  applicationId String  @unique
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  participants Participant[]
+  messages  Message[]
+
+  createdAt DateTime  @default(now())
+}
+
+model Participant{
+  id String @id @default(cuid())
+
+  userId  String
+  conversationId String
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user  Users @relation("UserToParticipants",fields: [userId], references: [id])
+
+  joinedAt DateTime @default(now())
+
+  @@unique([conversationId, userId])
+}
+
+model Message {
+  id String @id @default(cuid())
+  
+  senderId  String
+  conversationId  String
+
+  content String?
+
+  readAt  DateTime?
+  createdAt DateTime  @default(now())
+  
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender Users  @relation(fields: [senderId], references: [id])
+
+  @@index([conversationId, createdAt])
+  
+}
+

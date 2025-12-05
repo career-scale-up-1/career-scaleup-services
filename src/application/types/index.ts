@@ -1,0 +1,1 @@
+export type Status = 'Applied' | 'ShortListed' | 'Hired' | 'Rejected';

@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "award" ALTER COLUMN "year" SET DATA TYPE TEXT;
