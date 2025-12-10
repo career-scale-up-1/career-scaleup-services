@@ -2,13 +2,3 @@
 .vscode
 .idea
 node_modules
-.pnpm-store
-coverage
-dist
-.tmp
-**/*.log
-npm-debug.log*
-pnpm-debug.log*
-.env
-.env.*
-Dockerfile

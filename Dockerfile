@@ -1,4 +1,3 @@
-# Multi-stage build for NestJS + Prisma app
 FROM node:22-bookworm-slim AS base
 WORKDIR /app
 ENV NODE_ENV=production
